@@ -1,5 +1,5 @@
 # What is Nobody's Firewall?
-Nobody Firewall (aka nfwall) is a simple —but powerful— firewall for SA-MP that protect your server against query flood/cookie flood attacks.
+Nobody's Firewall (aka nfwall) is a simple —but powerful— firewall for SA-MP that protect your server against query flood/cookie flood attacks.
 
 Requisites
 -------------------------------
@@ -17,6 +17,7 @@ Acknowledgments
 -------------------------------
 * **n3ptun0 (aka Stella)** for his firewall for SA-MP 0.3e.
 * **Silver Moon** for his base code.
+
 License
 -------
 
