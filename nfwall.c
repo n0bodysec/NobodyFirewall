@@ -1,9 +1,9 @@
 /***********************************
  *         Nobody Firewall         *
  *                                 *
- *   @Author:      Nobody          *
- *   @Version:     0.1 BETA        *
- *   @Date:        28/07/2017      *
+ *   @Author:    Nobody            *
+ *   @Version:   0.1 BETA FIX #1   *
+ *   @Date:      28/07/2017        *
  *                                 *
  * Thanks to Silver Moon & n3ptun0 *
  **********************************/
@@ -24,8 +24,8 @@
 #include <pthread.h>
 
 /* ==================================== [ DEFINES ] ==================================== */
-//#define FLAG_DEBUG
 #define	FIREWALL_VERSION "0.1 BETA"
+//#define FLAG_DEBUG
 #define SLEEP_SECONDS	 (1)
 #define MAX_QUERIES		 (60) // per SLEEP_SECONDS
 #define MAX_COOKIES		 (5) // per SLEEP_SECONDS
@@ -36,9 +36,6 @@ void ProcessPackets(u_char*, const struct pcap_pkthdr*, const u_char*);
 void ProcessUDPPacket(const u_char*, int);
 void ProcessSAMPPacket(char* host, u_short port, uint query);
 void ProcessCookiePacket(char* host, u_short port);
-#ifdef FLAG_DEBUG
-void ProcessICPacket(char* host, u_short port);
-#endif
 void* threadCheck(void* ptr);
 void threadReload();
 void Ban(char* host, int type);
@@ -87,16 +84,16 @@ int main(int argc, char* argv[])
 	}
 	else iface = argv[1];
 	
-	//char* iface = (argv[1] ? argv[1] : "any");
 	system("clear");
-	printf("####################################################\n");
-	printf("#        Nobody Firewall v"FIREWALL_VERSION" started.        #\n");
-	printf("####################################################\n\n");
+	printf("######################################################\n");
+	printf("#         Nobody Firewall v"FIREWALL_VERSION" started.         #\n");
+	printf("######################################################\n");
+	if (argc < 2) printf("[!] Usage: %s <iface>\n", argv[0]);
 #ifdef FLAG_DEBUG
 	printf("[!] Information: Debug flag is enabled.\n");
 #endif
 	if (!argv[1])
-		printf("[!] Warning: Using default interface: \"%s\".\n[!] You can change the interface using: %s <iface>.\n\n", iface, argv[0]);
+		printf("[!] Warning: Using default interface: \"%s\".\n\n", iface, argv[0]);
 	
 	printf("[!] Finding available devices, please wait...");
 	if (pcap_findalldevs(&alldevsp, errbuf))
@@ -154,15 +151,15 @@ void ProcessUDPPacket(const u_char* buffer, int size)
 	const u_char* packet = buffer + header_size;
 	
 	if ((uint)packet[0] == 0x53 && (uint)packet[1] == 0x41 && (uint)packet[2] == 0x4d && (uint)packet[3] == 0x50)
-		ProcessSAMPPacket(inet_ntoa(source.sin_addr), ntohs(udph->dest), (uint)packet[10]); // src ip, dest port
+		ProcessSAMPPacket(inet_ntoa(source.sin_addr), ntohs(udph->dest), (uint)packet[10]);
 		
-	else if ((uint)packet[0] == 0x08 && (uint)packet[1] == 0x1e /* && (uint)packet[2] == 0x?? */ && (uint)packet[3] == 0xda)
+	if ((uint)packet[0] == 0x08 && (uint)packet[1] == 0x1e /* && (uint)packet[2] == 0x?? */ && (uint)packet[3] == 0xda)
 		ProcessCookiePacket(inet_ntoa(source.sin_addr), ntohs(udph->dest));
 		
-#ifdef FLAG_DEBUG
-	else if ((uint)packet[0] == 0x28 && ntohs(udph->len) == 12) // incoming connection
-		ProcessICPacket(inet_ntoa(source.sin_addr), ntohs(udph->dest));
-#endif
+/*#ifdef FLAG_DEBUG
+	if ((uint)packet[0] == 0x28 && ntohs(udph->len) == 12) // incoming connection
+		printf("[!] Incoming connection packet from %s.\n", inet_ntoa(source.sin_addr));
+#endif*/
 }
 
 void ProcessSAMPPacket(char* host, u_short port, uint query)
@@ -217,11 +214,6 @@ void ProcessCookiePacket(char* host, u_short port)
 	}
 }
 
-#ifdef FLAG_DEBUG
-void ProcessICPacket(char* host, u_short port) {
-	printf("[!] Incoming connection packet from %s.\n", host); }
-#endif
-
 void Ban(char* host, int type)
 {
 	static char buffer[85];
@@ -233,10 +225,10 @@ void Ban(char* host, int type)
 		printf("[!] Unable to open log file.\n");
 	fprintf(logfile, "[%02d/%02d/%02d - %02d:%02d:%02d] %s", tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday, tm->tm_hour, tm->tm_min, tm->tm_sec, buffer);
 	fclose(logfile);
-    char cmd[50];
-    memset(cmd, 0, sizeof(cmd));
-    sprintf(cmd, "iptables -A INPUT -s %s -j DROP", host);
-    system(cmd);
+	char cmd[50];
+	memset(cmd, 0, sizeof(cmd));
+	sprintf(cmd, "iptables -A INPUT -s %s -j DROP", host);
+	system(cmd);
 }
 
 int CheckIfExists(char* host)
