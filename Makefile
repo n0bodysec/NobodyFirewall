@@ -1,5 +1,5 @@
 all:
-	gcc -lpcap -lpthread nfwall.c -o nfwall
+	gcc nfwall.c -o nfwall -pthread -lpcap
 
 clean:
 	$(RM) nfwall

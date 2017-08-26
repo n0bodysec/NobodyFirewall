@@ -2,12 +2,11 @@
  *         Nobody Firewall         *
  *                                 *
  *   @Author:    Nobody            *
- *   @Version:   0.1 BETA FIX #1   *
- *   @Date:      28/07/2017        *
+ *   @Version:   0.1 BETA FIX #2   *
+ *   @Date:      26/08/2017        *
  *                                 *
  * Thanks to Silver Moon & n3ptun0 *
  **********************************/
- // Compile: gcc -lpcap -lpthread nfwall.c -o nfwall
 
 /* ==================================== [ INCLUDES ] ==================================== */
 #include <stdio.h>
@@ -24,8 +23,8 @@
 #include <pthread.h>
 
 /* ==================================== [ DEFINES ] ==================================== */
-#define	FIREWALL_VERSION "0.1 BETA"
 //#define FLAG_DEBUG
+#define	FIREWALL_VERSION "0.1 BETA"
 #define SLEEP_SECONDS	 (1)
 #define MAX_QUERIES		 (60) // per SLEEP_SECONDS
 #define MAX_COOKIES		 (5) // per SLEEP_SECONDS
@@ -93,7 +92,7 @@ int main(int argc, char* argv[])
 	printf("[!] Information: Debug flag is enabled.\n");
 #endif
 	if (!argv[1])
-		printf("[!] Warning: Using default interface: \"%s\".\n\n", iface, argv[0]);
+		printf("[!] Warning: Using default interface: \"%s\".\n\n", iface);
 	
 	printf("[!] Finding available devices, please wait...");
 	if (pcap_findalldevs(&alldevsp, errbuf))
@@ -176,7 +175,8 @@ void ProcessSAMPPacket(char* host, u_short port, uint query)
 	}
 	else
 	{
-		for (int i = 0; i < STRUCT_NUMBER; i++)
+		int i = 0;
+		for (i = 0; i < STRUCT_NUMBER; i++)
 		{
 			if (strcmp(ddosInfo[i].host, "127.0.0.1") == 0)
 			{
@@ -202,7 +202,8 @@ void ProcessCookiePacket(char* host, u_short port)
 	}
 	else
 	{
-		for (int i = 0; i < STRUCT_NUMBER; i++)
+		int i = 0;
+		for (i = 0; i < STRUCT_NUMBER; i++)
 		{
 			if (strcmp(ddosInfo[i].host, "127.0.0.1") == 0)
 			{
@@ -233,7 +234,8 @@ void Ban(char* host, int type)
 
 int CheckIfExists(char* host)
 {
-	for (int i = 0; i < STRUCT_NUMBER; i++)
+	int i = 0;
+	for (i = 0; i < STRUCT_NUMBER; i++)
 	{
 		if (strcmp(ddosInfo[i].host, host) == 0)
 		return i;
@@ -243,7 +245,8 @@ int CheckIfExists(char* host)
 
 void threadReload()
 {
-	for (int i = 0; i < STRUCT_NUMBER; i++)
+	int i = 0;
+	for (i = 0; i < STRUCT_NUMBER; i++)
 	{
 		strcpy(ddosInfo[i].host, "127.0.0.1");
 		ddosInfo[i].CookiePackets = 0;
