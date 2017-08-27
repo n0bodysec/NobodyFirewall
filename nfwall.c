@@ -33,11 +33,11 @@
 typedef unsigned int uint;
 void ProcessPackets(u_char*, const struct pcap_pkthdr*, const u_char*);
 void ProcessUDPPacket(const u_char*, int);
-void ProcessSAMPPacket(char* host, u_short port, uint query);
-void ProcessCookiePacket(char* host, u_short port);
+void ProcessSAMPPacket(char* host, u_short port, u_short dst_port, uint query);
+void ProcessCookiePacket(char* host, u_short port, u_short dst_port);
 void* threadCheck(void* ptr);
 void threadReload();
-void Ban(char* host, int type);
+void Ban(char* host, u_short port, u_short dst_port, int type);
 int CheckIfExists(char* host);
 
 struct userPackets
@@ -150,10 +150,10 @@ void ProcessUDPPacket(const u_char* buffer, int size)
 	const u_char* packet = buffer + header_size;
 	
 	if ((uint)packet[0] == 0x53 && (uint)packet[1] == 0x41 && (uint)packet[2] == 0x4d && (uint)packet[3] == 0x50)
-		ProcessSAMPPacket(inet_ntoa(source.sin_addr), ntohs(udph->dest), (uint)packet[10]);
+		ProcessSAMPPacket(inet_ntoa(source.sin_addr), ntohs(udph->source), ntohs(udph->dest), (uint)packet[10]);
 		
 	if ((uint)packet[0] == 0x08 && (uint)packet[1] == 0x1e /* && (uint)packet[2] == 0x?? */ && (uint)packet[3] == 0xda)
-		ProcessCookiePacket(inet_ntoa(source.sin_addr), ntohs(udph->dest));
+		ProcessCookiePacket(inet_ntoa(source.sin_addr), ntohs(udph->source), ntohs(udph->dest));
 		
 /*#ifdef FLAG_DEBUG
 	if ((uint)packet[0] == 0x28 && ntohs(udph->len) == 12) // incoming connection
@@ -161,17 +161,17 @@ void ProcessUDPPacket(const u_char* buffer, int size)
 #endif*/
 }
 
-void ProcessSAMPPacket(char* host, u_short port, uint query)
+void ProcessSAMPPacket(char* host, u_short port, u_short dst_port, uint query)
 {
 #ifdef FLAG_DEBUG
-	printf("[!] Incoming query:%c packet from %s.\n", query, host);
+	printf("[!] Incoming query:%c packet from %s:%d to port %d.\n", query, host, port, dst_port);
 #endif
 	int check = CheckIfExists(host);
 	if (check != -1)
 	{
 		ddosInfo[check].QueryPackets++;
 		if (ddosInfo[check].QueryPackets > MAX_QUERIES)
-			Ban(ddosInfo[check].host, 1);
+			Ban(ddosInfo[check].host, 1, port, dst_port);
 	}
 	else
 	{
@@ -188,17 +188,17 @@ void ProcessSAMPPacket(char* host, u_short port, uint query)
 	}
 }
 
-void ProcessCookiePacket(char* host, u_short port)
+void ProcessCookiePacket(char* host, u_short port, u_short dst_port)
 {
 #ifdef FLAG_DEBUG
-	printf("[!] Incoming cookie packet from %s.\n", host);
+	printf("[!] Incoming cookie packet from %s:%d to port %d.\n", host, port, dst_port);
 #endif
 	int check = CheckIfExists(host);
 	if (check != -1)
 	{
 		ddosInfo[check].CookiePackets++;
 		if (ddosInfo[check].CookiePackets > MAX_COOKIES)
-			Ban(ddosInfo[check].host, 0);
+			Ban(ddosInfo[check].host, 0, port, dst_port);
 	}
 	else
 	{
@@ -215,10 +215,10 @@ void ProcessCookiePacket(char* host, u_short port)
 	}
 }
 
-void Ban(char* host, int type)
+void Ban(char* host, u_short port, u_short dst_port, int type)
 {
 	static char buffer[85];
-	sprintf(buffer, "Incoming attack from %s. Attack type: %s. Blocking it.\n", host, (type == 1 ? "Query Flood" : "Cookie Flood"));
+	sprintf(buffer, "Incoming attack from %s:%d to port %d. Attack type: %s. Blocking it.\n", host, port, dst_port, (type == 1 ? "Query Flood" : "Cookie Flood"));
 	printf("[!] %s", buffer);
 	time(&_rw);
 	tm = localtime(&_rw);
