@@ -6,9 +6,10 @@ Requisites
 - [`libpcap`](https://github.com/the-tcpdump-group/libpcap)
 
 ## Getting Started
-1. ```git clone https://github.com/n0bodysec/NobodyFirewall.git```
-2. ```cd NobodyFirewall```
-3. ```make```
+1. ```apt-get update && apt-get install gcc libpcap0.8* -y```
+2. ```git clone https://github.com/n0bodysec/NobodyFirewall.git```
+3. ```cd NobodyFirewall```
+4. ```make```
 
 ## Usage
 ```./nfwall <iface>```
